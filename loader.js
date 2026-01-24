@@ -1,35 +1,58 @@
-// loader.js — fully CDN-based split data loader
-const DATA_PARTS = [
-  "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part1",
-  "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part2",
-  "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part3",
-  "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part4"
-];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Undertale Web</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: black;
+    }
+    #game-canvas { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
 
+<canvas id="game-canvas"></canvas>
+
+<script>
 (async () => {
-  // Fetch all parts from jsDelivr
-  const chunks = [];
-  for (const partUrl of DATA_PARTS) {
-    const res = await fetch(partUrl);
-    if (!res.ok) throw new Error("Failed to load " + partUrl);
-    chunks.push(new Uint8Array(await res.arrayBuffer()));
-  }
+  const DATA_PARTS = [
+    "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part1",
+    "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part2",
+    "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part3",
+    "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/data.part4"
+  ];
 
-  // Merge parts into a single data.win buffer
-  let totalLength = 0;
-  for (const chunk of chunks) totalLength += chunk.length;
-
+  // Fetch all parts
+  const buffers = await Promise.all(DATA_PARTS.map(url => fetch(url).then(r => r.arrayBuffer())));
+  const totalLength = buffers.reduce((sum, buf) => sum + buf.byteLength, 0);
   const dataWin = new Uint8Array(totalLength);
   let offset = 0;
-  for (const chunk of chunks) {
-    dataWin.set(chunk, offset);
-    offset += chunk.length;
+  for (const buf of buffers) {
+    dataWin.set(new Uint8Array(buf), offset);
+    offset += buf.byteLength;
   }
 
-  // Inject data.win into Emscripten FS before engine starts
-  Module = Module || {};
-  Module.preRun = Module.preRun || [];
-  Module.preRun.push(() => {
-    FS.createDataFile("/", "data.win", dataWin, true, true);
-  });
+  // Create Module before runner.js
+  window.Module = {
+    preRun: [() => {
+      FS.createDataFile("/", "data.win", dataWin, true, true);
+    }],
+    canvas: document.getElementById("game-canvas")
+  };
+
+  // Load runner.js dynamically AFTER data.win is ready
+  const script = document.createElement("script");
+  script.src = "https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/runner.js";
+  document.body.appendChild(script);
 })();
+</script>
+
+</body>
+</html>
