@@ -2,17 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>UNDERTALE Web</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Undertale Web</title>
+  <style>
+    html, body, #game-canvas {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: black;
+    }
+    #game-canvas { display: block; }
+  </style>
 </head>
 <body>
-  <div id="game-container"></div>
 
-  <!-- Engine -->
-  <script src="runner.js"></script>
+<canvas id="game-canvas"></canvas>
 
-  <!-- Loader for split data files -->
-  <script src="loader.js"></script>
+<!-- Load your data loader -->
+<script src="https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/loader.js"></script>
+
+<!-- Load the game engine -->
+<script src="https://cdn.jsdelivr.net/gh/KaiFireblade10/undertale-web@main/runner.js"></script>
+
 </body>
 </html>
